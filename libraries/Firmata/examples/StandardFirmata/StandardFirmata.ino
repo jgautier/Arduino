@@ -46,6 +46,7 @@
 
 #define REGISTER_NOT_SPECIFIED -1
 
+
 /*==============================================================================
  * GLOBAL VARIABLES
  *============================================================================*/
@@ -328,7 +329,6 @@ void sysexCallback(byte command, byte argc, byte *argv)
   byte slaveRegister;
   byte data;
   unsigned int delayTime; 
-  
   switch(command) {
   case I2C_REQUEST:
     mode = argv[1] & I2C_READ_WRITE_MODE_MASK;
@@ -379,7 +379,7 @@ void sysexCallback(byte command, byte argc, byte *argv)
       query[queryIndex].bytes = argv[4] + (argv[5] << 7);
       break;
     case I2C_STOP_READING:
-	  byte queryIndexToSkip;      
+    byte queryIndexToSkip;      
       // if read continuous mode is enabled for only 1 i2c device, disable
       // read continuous reporting for that device
       if (queryIndex <= 0) {
@@ -434,6 +434,24 @@ void sysexCallback(byte command, byte argc, byte *argv)
         servos[PIN_TO_SERVO(pin)].attach(PIN_TO_DIGITAL(pin), minPulse, maxPulse);
         setPinModeCallback(pin, SERVO);
       }
+    }
+    break;
+  case SHIFT_OUT:
+      //shiftOut(9,8,MSBFIRST,B00000011);
+      if(argv[2] == 0){
+       shiftOut(PIN_TO_DIGITAL(argv[0]),PIN_TO_DIGITAL(argv[1]),LSBFIRST,argv[3]); 
+      } else {
+       shiftOut(PIN_TO_DIGITAL(argv[0]),PIN_TO_DIGITAL(argv[1]),MSBFIRST,argv[3]);
+      }
+    break;
+  case SHIFT_IN:
+    //Firmata.sendString("shifting in you");
+    if(argv[2] == 0){
+     byte shiftValue[] = {shiftIn(PIN_TO_DIGITAL(argv[0]),PIN_TO_DIGITAL(argv[1]),LSBFIRST)};
+     Firmata.sendSysex(SHIFT_IN,1,shiftValue);
+    } else {
+     byte shiftValue[] = {shiftIn(PIN_TO_DIGITAL(argv[0]),PIN_TO_DIGITAL(argv[1]),MSBFIRST)}; 
+     Firmata.sendSysex(SHIFT_IN,1,shiftValue);
     }
     break;
   case SAMPLING_INTERVAL:
@@ -492,9 +510,9 @@ void sysexCallback(byte command, byte argc, byte *argv)
       Serial.write(pin);
       if (pin < TOTAL_PINS) {
         Serial.write((byte)pinConfig[pin]);
-	Serial.write((byte)pinState[pin] & 0x7F);
-	if (pinState[pin] & 0xFF80) Serial.write((byte)(pinState[pin] >> 7) & 0x7F);
-	if (pinState[pin] & 0xC000) Serial.write((byte)(pinState[pin] >> 14) & 0x7F);
+  Serial.write((byte)pinState[pin] & 0x7F);
+  if (pinState[pin] & 0xFF80) Serial.write((byte)(pinState[pin] >> 7) & 0x7F);
+  if (pinState[pin] & 0xC000) Serial.write((byte)(pinState[pin] >> 14) & 0x7F);
       }
       Serial.write(END_SYSEX);
     }
@@ -546,11 +564,11 @@ void systemResetCallback()
   // initialize a defalt state
   // TODO: option to load config from EEPROM instead of default
   if (isI2CEnabled) {
-  	disableI2CPins();
+    disableI2CPins();
   }
   for (byte i=0; i < TOTAL_PORTS; i++) {
     reportPINs[i] = false;      // by default, reporting off
-    portConfigInputs[i] = 0;	// until activated
+    portConfigInputs[i] = 0;  // until activated
     previousPINs[i] = 0;
   }
   // pins with analog capability default to analog input
