@@ -437,7 +437,6 @@ void sysexCallback(byte command, byte argc, byte *argv)
     }
     break;
   case SHIFT_OUT:
-      //shiftOut(9,8,MSBFIRST,B00000011);
       if(argv[2] == 0){
        shiftOut(PIN_TO_DIGITAL(argv[0]),PIN_TO_DIGITAL(argv[1]),LSBFIRST,argv[3]); 
       } else {
@@ -445,7 +444,6 @@ void sysexCallback(byte command, byte argc, byte *argv)
       }
     break;
   case SHIFT_IN:
-    //Firmata.sendString("shifting in you");
     if(argv[2] == 0){
      byte shiftValue[] = {shiftIn(PIN_TO_DIGITAL(argv[0]),PIN_TO_DIGITAL(argv[1]),LSBFIRST)};
      Firmata.sendSysex(SHIFT_IN,1,shiftValue);
