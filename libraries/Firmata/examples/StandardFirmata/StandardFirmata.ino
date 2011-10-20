@@ -329,6 +329,7 @@ void sysexCallback(byte command, byte argc, byte *argv)
   byte slaveRegister;
   byte data;
   unsigned int delayTime; 
+  byte shiftValue[1];
   switch(command) {
   case I2C_REQUEST:
     mode = argv[1] & I2C_READ_WRITE_MODE_MASK;
@@ -437,20 +438,11 @@ void sysexCallback(byte command, byte argc, byte *argv)
     }
     break;
   case SHIFT_OUT:
-      if(argv[2] == 0){
-       shiftOut(PIN_TO_DIGITAL(argv[0]),PIN_TO_DIGITAL(argv[1]),LSBFIRST,argv[3]); 
-      } else {
-       shiftOut(PIN_TO_DIGITAL(argv[0]),PIN_TO_DIGITAL(argv[1]),MSBFIRST,argv[3]);
-      }
+    shiftOut(PIN_TO_DIGITAL(argv[0]),PIN_TO_DIGITAL(argv[1]),argv[2],argv[3]); 
     break;
   case SHIFT_IN:
-    if(argv[2] == 0){
-     byte shiftValue[] = {shiftIn(PIN_TO_DIGITAL(argv[0]),PIN_TO_DIGITAL(argv[1]),LSBFIRST)};
-     Firmata.sendSysex(SHIFT_IN,1,shiftValue);
-    } else {
-     byte shiftValue[] = {shiftIn(PIN_TO_DIGITAL(argv[0]),PIN_TO_DIGITAL(argv[1]),MSBFIRST)}; 
-     Firmata.sendSysex(SHIFT_IN,1,shiftValue);
-    }
+    shiftValue[0] = shiftIn(PIN_TO_DIGITAL(argv[0]),PIN_TO_DIGITAL(argv[1]),argv[2]);
+    Firmata.sendSysex(SHIFT_IN,1,shiftValue);
     break;
   case SAMPLING_INTERVAL:
     if (argc > 1) {
@@ -504,7 +496,7 @@ void sysexCallback(byte command, byte argc, byte *argv)
     if (argc > 0) {
       byte pin=argv[0];
       Serial.write(START_SYSEX);
-      Serial.write(PIN_STATE_RESPONSE);
+      Serial.write(PIN_STATE_RESPONSE); 
       Serial.write(pin);
       if (pin < TOTAL_PINS) {
         Serial.write((byte)pinConfig[pin]);
